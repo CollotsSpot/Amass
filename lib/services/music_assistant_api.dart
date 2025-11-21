@@ -102,7 +102,6 @@ class MusicAssistantAPI {
       _logger.log('Final WebSocket URL: $wsUrl');
 
       // Use native dart:io WebSocket for better control
-      final uri = Uri.parse(wsUrl);
       _logger.log('Connecting to: ${uri.host}:${uri.hasPort ? uri.port : (useSecure ? 443 : 80)}${uri.path}');
 
       // Connect using native WebSocket with custom headers
