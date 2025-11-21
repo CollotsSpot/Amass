@@ -2,7 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsService {
   static const String _keyServerUrl = 'server_url';
-  static const String _keyDefaultServer = 'music.serverscloud.org';
+  static const String _keyDefaultServer = 'ma.serverscloud.org';
 
   static Future<String> getServerUrl() async {
     final prefs = await SharedPreferences.getInstance();
