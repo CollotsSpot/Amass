@@ -99,7 +99,27 @@ class MusicAssistantAPI {
       _logger.log('Attempting ${useSecure ? "secure (WSS)" : "unsecure (WS)"} connection');
       _logger.log('Final WebSocket URL: $wsUrl');
 
-      _channel = WebSocketChannel.connect(Uri.parse(wsUrl));
+      // Parse the URL and handle the WebSocket connection
+      final finalUri = Uri.parse(wsUrl);
+
+      // For WSS without explicit port, we need to handle port 443 specially
+      // to avoid the library using port 0
+      Uri connectionUri;
+      if (finalUri.scheme == 'wss' && finalUri.port == 0) {
+        // Explicitly set port 443 for secure WebSocket to avoid port 0 issue
+        connectionUri = Uri(
+          scheme: finalUri.scheme,
+          host: finalUri.host,
+          port: 443,
+          path: finalUri.path,
+        );
+        _logger.log('Explicitly setting port 443 for WSS connection to avoid port 0');
+      } else {
+        connectionUri = finalUri;
+      }
+
+      _logger.log('Connection URI: $connectionUri');
+      _channel = WebSocketChannel.connect(connectionUri);
 
       // Wait for server info message before considering connected
       _connectionCompleter = Completer<void>();
