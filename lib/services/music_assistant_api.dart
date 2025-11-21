@@ -81,13 +81,14 @@ class MusicAssistantAPI {
         // Port is already specified in URL, keep it
         _logger.log('Using port from URL: ${uri.port}');
       } else {
-        // No port specified, use defaults based on protocol
+        // No port specified
         if (useSecure) {
-          // For WSS (secure WebSocket), default to standard HTTPS port 443
-          wsUrl = '${uri.scheme}://${uri.host}:443${uri.path}';
-          _logger.log('No port specified, defaulting to 443 for secure connection');
+          // For WSS (secure WebSocket), don't add port 443 (it's the default)
+          // This is important for Cloudflare and reverse proxies
+          wsUrl = '${uri.scheme}://${uri.host}${uri.path}';
+          _logger.log('Using default WSS port (443 implicit) for secure connection');
         } else {
-          // For WS (unsecure WebSocket), default to Music Assistant default 8095
+          // For WS (unsecure WebSocket), add Music Assistant default port 8095
           wsUrl = '${uri.scheme}://${uri.host}:8095${uri.path}';
           _logger.log('No port specified, defaulting to 8095 for unsecure connection');
         }
@@ -413,8 +414,8 @@ class MusicAssistantAPI {
       baseUrl = '${uri.scheme}://${uri.host}:$_cachedCustomPort';
     } else if (!uri.hasPort) {
       if (useSecure) {
-        // For HTTPS, default to standard port 443
-        baseUrl = '${uri.scheme}://${uri.host}:443';
+        // For HTTPS, don't add port 443 (it's the default)
+        baseUrl = '${uri.scheme}://${uri.host}';
       } else {
         // For HTTP, default to Music Assistant port 8095
         baseUrl = '${uri.scheme}://${uri.host}:8095';
@@ -450,8 +451,8 @@ class MusicAssistantAPI {
       baseUrl = '${uri.scheme}://${uri.host}:$_cachedCustomPort';
     } else if (!uri.hasPort) {
       if (useSecure) {
-        // For HTTPS, default to standard port 443
-        baseUrl = '${uri.scheme}://${uri.host}:443';
+        // For HTTPS, don't add port 443 (it's the default)
+        baseUrl = '${uri.scheme}://${uri.host}';
       } else {
         // For HTTP, default to Music Assistant port 8095
         baseUrl = '${uri.scheme}://${uri.host}:8095';
