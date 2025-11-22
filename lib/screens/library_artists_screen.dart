@@ -75,13 +75,18 @@ class LibraryArtistsScreen extends StatelessWidget {
       );
     }
 
-    return ListView.builder(
-      itemCount: provider.artists.length,
-      padding: const EdgeInsets.all(8),
-      itemBuilder: (context, index) {
-        final artist = provider.artists[index];
-        return _buildArtistTile(artist, provider);
+    return RefreshIndicator(
+      onRefresh: () async {
+        await provider.loadLibrary();
       },
+      child: ListView.builder(
+        itemCount: provider.artists.length,
+        padding: const EdgeInsets.all(8),
+        itemBuilder: (context, index) {
+          final artist = provider.artists[index];
+          return _buildArtistTile(artist, provider);
+        },
+      ),
     );
   }
 

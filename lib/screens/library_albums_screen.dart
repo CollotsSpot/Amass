@@ -75,19 +75,24 @@ class LibraryAlbumsScreen extends StatelessWidget {
       );
     }
 
-    return GridView.builder(
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.75,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-      ),
-      padding: const EdgeInsets.all(12),
-      itemCount: provider.albums.length,
-      itemBuilder: (context, index) {
-        final album = provider.albums[index];
-        return _buildAlbumCard(context, album, provider);
+    return RefreshIndicator(
+      onRefresh: () async {
+        await provider.loadLibrary();
       },
+      child: GridView.builder(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 0.75,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+        ),
+        padding: const EdgeInsets.all(12),
+        itemCount: provider.albums.length,
+        itemBuilder: (context, index) {
+          final album = provider.albums[index];
+          return _buildAlbumCard(context, album, provider);
+        },
+      ),
     );
   }
 
