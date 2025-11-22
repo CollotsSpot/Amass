@@ -9,12 +9,12 @@ class MiniPlayer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final playerProvider = context.watch<MusicPlayerProvider>();
     final maProvider = context.watch<MusicAssistantProvider>();
-    final currentTrack = playerProvider.currentTrack;
+    final selectedPlayer = maProvider.selectedPlayer;
+    final currentTrack = maProvider.currentTrack;
 
-    // Don't show mini player if no track is loaded
-    if (currentTrack == null) {
+    // Don't show mini player if no track is playing or no player selected
+    if (currentTrack == null || selectedPlayer == null) {
       return const SizedBox.shrink();
     }
 
@@ -41,28 +41,12 @@ class MiniPlayer extends StatelessWidget {
         ),
         child: Column(
           children: [
-            // Progress indicator
-            StreamBuilder<Duration>(
-              stream: playerProvider.positionStream,
-              builder: (context, positionSnapshot) {
-                return StreamBuilder<Duration?>(
-                  stream: playerProvider.durationStream,
-                  builder: (context, durationSnapshot) {
-                    final position = positionSnapshot.data ?? Duration.zero;
-                    final duration = durationSnapshot.data ?? Duration.zero;
-                    final progress = duration.inMilliseconds > 0
-                        ? position.inMilliseconds / duration.inMilliseconds
-                        : 0.0;
-
-                    return LinearProgressIndicator(
-                      value: progress,
-                      backgroundColor: Colors.white.withOpacity(0.1),
-                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                      minHeight: 2,
-                    );
-                  },
-                );
-              },
+            // Progress indicator (simple for now - just shows if playing)
+            LinearProgressIndicator(
+              value: selectedPlayer.isPlaying ? null : 0,
+              backgroundColor: Colors.white.withOpacity(0.1),
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+              minHeight: 2,
             ),
             // Player content
             Expanded(
@@ -92,7 +76,7 @@ class MiniPlayer extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            currentTrack.title,
+                            currentTrack.name,
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 14,
@@ -103,7 +87,7 @@ class MiniPlayer extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            currentTrack.artist,
+                            currentTrack.artistsString,
                             style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 12,
@@ -114,37 +98,28 @@ class MiniPlayer extends StatelessWidget {
                         ],
                       ),
                     ),
-                    // Playback controls
+                    // Playback controls for selected player
                     IconButton(
                       icon: const Icon(Icons.skip_previous_rounded),
                       color: Colors.white,
                       iconSize: 28,
-                      onPressed: playerProvider.previous,
+                      onPressed: maProvider.previousTrackSelectedPlayer,
                     ),
-                    StreamBuilder<bool>(
-                      stream: playerProvider.playerStateStream.map(
-                        (state) => state.playing,
+                    IconButton(
+                      icon: Icon(
+                        selectedPlayer.isPlaying
+                            ? Icons.pause_rounded
+                            : Icons.play_arrow_rounded,
                       ),
-                      initialData: false,
-                      builder: (context, snapshot) {
-                        final isPlaying = snapshot.data ?? false;
-                        return IconButton(
-                          icon: Icon(
-                            isPlaying
-                                ? Icons.pause_rounded
-                                : Icons.play_arrow_rounded,
-                          ),
-                          color: Colors.white,
-                          iconSize: 32,
-                          onPressed: playerProvider.togglePlayPause,
-                        );
-                      },
+                      color: Colors.white,
+                      iconSize: 32,
+                      onPressed: maProvider.playPauseSelectedPlayer,
                     ),
                     IconButton(
                       icon: const Icon(Icons.skip_next_rounded),
                       color: Colors.white,
                       iconSize: 28,
-                      onPressed: playerProvider.next,
+                      onPressed: maProvider.nextTrackSelectedPlayer,
                     ),
                   ],
                 ),

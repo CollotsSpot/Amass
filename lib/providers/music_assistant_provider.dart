@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../models/media_item.dart';
 import '../models/player.dart';
@@ -26,6 +27,8 @@ class MusicAssistantProvider with ChangeNotifier {
   // Player selection
   Player? _selectedPlayer;
   List<Player> _availablePlayers = [];
+  Track? _currentTrack; // Current track playing on selected player
+  Timer? _playerStateTimer;
 
   MAConnectionState get connectionState => _connectionState;
   String? get serverUrl => _serverUrl;
@@ -39,6 +42,7 @@ class MusicAssistantProvider with ChangeNotifier {
   // Player selection getters
   Player? get selectedPlayer => _selectedPlayer;
   List<Player> get availablePlayers => _availablePlayers;
+  Track? get currentTrack => _currentTrack;
 
   MusicAssistantProvider() {
     _initialize();
@@ -117,11 +121,14 @@ class MusicAssistantProvider with ChangeNotifier {
   Future<void> disconnect() async {
     _builtinPlayer?.stop();
     _builtinPlayer = null;
+    _playerStateTimer?.cancel();
+    _playerStateTimer = null;
     await _api?.disconnect();
     _connectionState = MAConnectionState.disconnected;
     _artists = [];
     _albums = [];
     _tracks = [];
+    _currentTrack = null;
     notifyListeners();
   }
 
@@ -324,7 +331,75 @@ class MusicAssistantProvider with ChangeNotifier {
   void selectPlayer(Player player) {
     _selectedPlayer = player;
     _logger.log('Selected player: ${player.name} (${player.playerId})');
+
+    // Start polling for player state
+    _startPlayerStatePolling();
+
     notifyListeners();
+  }
+
+  /// Start polling for selected player's current state
+  void _startPlayerStatePolling() {
+    _playerStateTimer?.cancel();
+
+    if (_selectedPlayer == null) return;
+
+    // Poll every 2 seconds
+    _playerStateTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      _updatePlayerState();
+    });
+
+    // Also update immediately
+    _updatePlayerState();
+  }
+
+  /// Update the selected player's current state
+  Future<void> _updatePlayerState() async {
+    if (_selectedPlayer == null || _api == null) return;
+
+    try {
+      // Get the player's queue
+      final queue = await getQueue(_selectedPlayer!.playerId);
+
+      if (queue != null && queue.currentItem != null) {
+        _currentTrack = queue.currentItem!.track;
+        notifyListeners();
+      } else if (_currentTrack != null) {
+        // Clear current track if queue is empty
+        _currentTrack = null;
+        notifyListeners();
+      }
+    } catch (e) {
+      // Silently fail - don't spam logs
+    }
+  }
+
+  /// Control the selected player
+  Future<void> playPauseSelectedPlayer() async {
+    if (_selectedPlayer == null) return;
+
+    if (_selectedPlayer!.isPlaying) {
+      await pausePlayer(_selectedPlayer!.playerId);
+    } else {
+      await resumePlayer(_selectedPlayer!.playerId);
+    }
+
+    // Refresh player state immediately
+    await refreshPlayers();
+  }
+
+  Future<void> nextTrackSelectedPlayer() async {
+    if (_selectedPlayer == null) return;
+    await nextTrack(_selectedPlayer!.playerId);
+    await Future.delayed(const Duration(milliseconds: 500));
+    await _updatePlayerState();
+  }
+
+  Future<void> previousTrackSelectedPlayer() async {
+    if (_selectedPlayer == null) return;
+    await previousTrack(_selectedPlayer!.playerId);
+    await Future.delayed(const Duration(milliseconds: 500));
+    await _updatePlayerState();
   }
 
   /// Refresh the list of available players
@@ -338,6 +413,7 @@ class MusicAssistantProvider with ChangeNotifier {
 
   @override
   void dispose() {
+    _playerStateTimer?.cancel();
     _builtinPlayer?.dispose();
     _audioPlayer.dispose();
     _api?.dispose();
