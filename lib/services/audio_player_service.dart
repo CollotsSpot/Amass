@@ -1,6 +1,7 @@
 import 'package:just_audio/just_audio.dart';
 import '../models/audio_track.dart';
 import 'debug_logger.dart';
+import 'stream_tester.dart';
 
 class AudioPlayerService {
   static final AudioPlayerService _instance = AudioPlayerService._internal();
@@ -9,6 +10,7 @@ class AudioPlayerService {
 
   final AudioPlayer _audioPlayer = AudioPlayer();
   final _logger = DebugLogger();
+  final _streamTester = StreamTester();
 
   AudioPlayer get audioPlayer => _audioPlayer;
 
@@ -51,6 +53,11 @@ class AudioPlayerService {
         // Use AudioSource for HTTP streams to allow custom headers
         if (track.filePath.startsWith('http://') ||
             track.filePath.startsWith('https://')) {
+          // Test stream URL before loading
+          _logger.log('Testing stream accessibility...');
+          await _streamTester.testStreamUrl(track.filePath);
+          await _streamTester.testStreamContent(track.filePath);
+
           final audioSource = AudioSource.uri(
             Uri.parse(track.filePath),
             headers: {
