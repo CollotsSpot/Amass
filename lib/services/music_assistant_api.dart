@@ -121,7 +121,24 @@ class MusicAssistantAPI {
       _logger.log('Attempting ${useSecure ? "secure (WSS)" : "unsecure (WS)"} connection');
       _logger.log('Final WebSocket URL: $wsUrl');
 
-      _channel = WebSocketChannel.connect(Uri.parse(wsUrl));
+      // Get authentication token for WebSocket connection
+      final authToken = await SettingsService.getAuthToken();
+      final headers = <String, dynamic>{};
+
+      if (authToken != null && authToken.isNotEmpty && authToken != 'authenticated') {
+        // Add session cookie to WebSocket handshake
+        headers['Cookie'] = 'authelia_session=$authToken';
+        _logger.log('🔑 Adding session cookie to WebSocket handshake');
+      } else if (authToken == 'authenticated') {
+        _logger.log('✓ Authenticated (no cookie needed for WebSocket)');
+      } else {
+        _logger.log('ℹ️ No authentication configured for WebSocket');
+      }
+
+      _channel = WebSocketChannel.connect(
+        Uri.parse(wsUrl),
+        headers: headers.isNotEmpty ? headers : null,
+      );
 
       // Wait for server info message before considering connected
       _connectionCompleter = Completer<void>();
