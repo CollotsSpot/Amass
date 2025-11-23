@@ -54,13 +54,13 @@ class Player {
 }
 
 class StreamDetails {
-  final String streamId;
+  final String? streamId;
   final int sampleRate;
   final int bitDepth;
   final String contentType;
 
   StreamDetails({
-    required this.streamId,
+    this.streamId,
     required this.sampleRate,
     required this.bitDepth,
     required this.contentType,
@@ -68,7 +68,7 @@ class StreamDetails {
 
   factory StreamDetails.fromJson(Map<String, dynamic> json) {
     return StreamDetails(
-      streamId: json['stream_id'] as String,
+      streamId: json['stream_id'] as String?,
       sampleRate: json['sample_rate'] as int? ?? 44100,
       bitDepth: json['bit_depth'] as int? ?? 16,
       contentType: json['content_type'] as String? ?? 'audio/flac',

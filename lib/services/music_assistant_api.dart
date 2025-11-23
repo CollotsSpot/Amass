@@ -863,6 +863,11 @@ class MusicAssistantAPI {
       }
 
       final streamId = currentItem.streamdetails!.streamId;
+      if (streamId == null) {
+        _logger.log('⚠️ Stream ID not available yet');
+        return null;
+      }
+
       final contentType = currentItem.streamdetails!.contentType;
       final extension = _getExtension(contentType);
 
