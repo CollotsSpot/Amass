@@ -6,7 +6,6 @@ import 'package:web_socket_channel/io.dart';
 import 'package:uuid/uuid.dart';
 import '../models/media_item.dart';
 import '../models/player.dart';
-import '../models/builtin_player_event.dart';
 import 'debug_logger.dart';
 import 'settings_service.dart';
 import 'retry_helper.dart';
@@ -37,11 +36,6 @@ class MusicAssistantAPI {
 
   // Cached custom port setting
   int? _cachedCustomPort;
-
-  // Built-in player
-  String? _builtinPlayerId;
-  final _builtinPlayerEventController = StreamController<BuiltinPlayerEvent>.broadcast();
-  Stream<BuiltinPlayerEvent> get builtinPlayerEvents => _builtinPlayerEventController.stream;
 
   MusicAssistantAPI(this.serverUrl);
 
@@ -198,11 +192,6 @@ class MusicAssistantAPI {
         _updateConnectionState(MAConnectionState.connected);
         _connectionCompleter?.complete();
 
-        // Register as built-in player after connection established
-        registerBuiltinPlayer().catchError((e) {
-          _logger.log('Failed to register built-in player: $e');
-        });
-
         return;
       }
 
@@ -227,22 +216,6 @@ class MusicAssistantAPI {
       final eventType = data['event'] as String?;
       if (eventType != null) {
         _logger.log('Event received: $eventType');
-
-        // Handle builtin_player events specially
-        if (eventType == 'builtin_player') {
-          final objectId = data['object_id'] as String?;
-          if (objectId == _builtinPlayerId) {
-            try {
-              final eventData = data['data'] as Map<String, dynamic>;
-              final playerEvent = BuiltinPlayerEvent.fromJson(eventData);
-              _logger.log('Builtin player event: ${playerEvent.type.value}');
-              _builtinPlayerEventController.add(playerEvent);
-            } catch (e) {
-              _logger.log('Error parsing builtin player event: $e');
-            }
-          }
-        }
-
         _eventStreams[eventType]?.add(data['data'] as Map<String, dynamic>);
       }
     } catch (e) {
@@ -1140,61 +1113,6 @@ class MusicAssistantAPI {
 
     return '$baseUrl/api/image/$size/${Uri.encodeComponent(imageUrl)}';
   }
-
-  // ============================================================================
-  // BUILT-IN PLAYER (Local playback on device)
-  // ============================================================================
-
-  /// Register this app as a built-in player with Music Assistant
-  Future<void> registerBuiltinPlayer() async {
-    try {
-      // Generate or get cached player ID
-      _builtinPlayerId = await SettingsService.getBuiltinPlayerId();
-      if (_builtinPlayerId == null) {
-        _builtinPlayerId = _uuid.v4();
-        await SettingsService.setBuiltinPlayerId(_builtinPlayerId!);
-      }
-
-      _logger.log('Registering built-in player: $_builtinPlayerId');
-
-      await _sendCommand(
-        'builtin_player/register',
-        args: {
-          'player_name': 'Music Assistant Mobile',
-          'player_id': _builtinPlayerId,
-        },
-      );
-
-      _logger.log('✓ Built-in player registered');
-    } catch (e) {
-      _logger.log('Error registering built-in player: $e');
-      rethrow;
-    }
-  }
-
-  /// Update the built-in player state (position, playing, etc.)
-  Future<void> updateBuiltinPlayerState(BuiltinPlayerState state) async {
-    if (_builtinPlayerId == null) return;
-
-    try {
-      await _sendCommand(
-        'builtin_player/update_state',
-        args: {
-          'player_id': _builtinPlayerId,
-          'state': state.toJson(),
-        },
-      );
-    } catch (e) {
-      _logger.log('Error updating built-in player state: $e');
-    }
-  }
-
-  /// Get the built-in player ID
-  String? get builtinPlayerId => _builtinPlayerId;
-
-  // ============================================================================
-  // END BUILT-IN PLAYER
-  // ============================================================================
 
   void _updateConnectionState(MAConnectionState state) {
     _currentState = state;
