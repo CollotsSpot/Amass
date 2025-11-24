@@ -1,8 +1,8 @@
 <div align="center">
   <img src="assets/images/logo.png" alt="Amass Logo" height="120">
-  <h1>Amass</h1>
+  <h1>Amass Your Music</h1>
   <p>A minimalistic mobile client for <a href="https://music-assistant.io/">Music Assistant</a></p>
-  <p>Stream your entire music library from your Music Assistant server to your mobile device.</p>
+  <p>Control your Music Assistant server and manage your entire music library from your mobile device.</p>
 </div>
 
 ---
@@ -13,18 +13,18 @@
 - **Server Connection** - Connect to your Music Assistant server via WebSocket
 - **Library Browsing** - Browse artists, albums, and tracks from your server
 - **Album Details** - View album information and track listings
-- **Music Streaming** - Stream audio directly from your Music Assistant server
+- **Playback Control** - Control playback on your Music Assistant server players
 - **Auto-Reconnect** - Automatic reconnection with connection status monitoring
 - **Settings Management** - Configure server URL with persistent storage
 
-### Player Features
+### Control Features
 - Clean, minimalistic dark UI design
-- Full audio playback controls (play/pause/skip/seek)
+- Full playback controls (play/pause/skip/seek) for server players
 - Progress bar with time display
-- Volume control slider
+- Volume control for server players
 - Now playing display with track information
-- Background audio playback support
-- Queue management
+- Queue management and viewing
+- Multi-player support
 
 ## Download
 
@@ -37,7 +37,7 @@ Download the latest APK from [GitHub Actions](https://github.com/CollotsSpot/Ama
 3. Tap **Configure Server** or go to **Settings**
 4. Enter your Music Assistant server URL (e.g., `music.serverscloud.org` or `192.168.1.100`)
 5. Tap **Connect**
-6. Browse your library and start playing music!
+6. Browse your library and control playback on your Music Assistant players!
 
 ## Requirements
 
@@ -47,7 +47,7 @@ Download the latest APK from [GitHub Actions](https://github.com/CollotsSpot/Ama
 
 ## About Music Assistant
 
-Amass is a client for [Music Assistant](https://music-assistant.io/), an open-source music library manager and player that integrates with various music sources and streaming providers. You'll need a running Music Assistant server to use this app.
+Amass Your Music is a remote control client for [Music Assistant](https://music-assistant.io/), an open-source music library manager and player that integrates with various music sources and streaming providers. You'll need a running Music Assistant server to use this app. Music playback happens on your Music Assistant server's configured players (speakers, smart devices, etc.), not on your mobile device.
 
 Learn more: [music-assistant.io](https://music-assistant.io/)
 
@@ -97,10 +97,9 @@ The APK will be available at `build/app/outputs/flutter-apk/app-release.apk`
 <summary>Technologies Used</summary>
 
 - **Flutter** - Cross-platform mobile framework
-- **just_audio** - Audio playback
-- **audio_service** - Background audio support
-- **web_socket_channel** - WebSocket communication
+- **web_socket_channel** - WebSocket communication with Music Assistant server
 - **provider** - State management
 - **shared_preferences** - Local settings storage
+- **http** - HTTP requests for API communication
 
 </details>
