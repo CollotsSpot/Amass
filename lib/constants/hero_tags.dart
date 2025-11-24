@@ -11,4 +11,10 @@ class HeroTags {
 
   /// Hero tag for artist image
   static const String artistImage = 'artist_image_';
+
+  /// Hero tags for now playing screen
+  static const String nowPlayingArt = 'now_playing_art';
+  static const String nowPlayingPreviousButton = 'now_playing_previous_button';
+  static const String nowPlayingPlayButton = 'now_playing_play_button';
+  static const String nowPlayingNextButton = 'now_playing_next_button';
 }

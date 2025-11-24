@@ -68,10 +68,13 @@ class _ArtistRowState extends State<ArtistRow> {
               return ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                physics: const BouncingScrollPhysics(),
                 itemCount: artists.length,
                 itemBuilder: (context, index) {
                   final artist = artists[index];
-                  return _ArtistCard(artist: artist);
+                  return RepaintBoundary(
+                    child: _ArtistCard(artist: artist),
+                  );
                 },
               );
             },

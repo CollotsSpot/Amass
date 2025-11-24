@@ -68,10 +68,13 @@ class _AlbumRowState extends State<AlbumRow> {
               return ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                physics: const BouncingScrollPhysics(),
                 itemCount: albums.length,
                 itemBuilder: (context, index) {
                   final album = albums[index];
-                  return _AlbumCard(album: album);
+                  return RepaintBoundary(
+                    child: _AlbumCard(album: album),
+                  );
                 },
               );
             },
@@ -120,6 +123,9 @@ class _AlbumCard extends StatelessWidget {
                         width: 150,
                         height: 150,
                         fit: BoxFit.cover,
+                        cacheWidth: 300,
+                        cacheHeight: 300,
+                        filterQuality: FilterQuality.medium,
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
                             width: 150,

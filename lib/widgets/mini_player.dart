@@ -61,7 +61,24 @@ class MiniPlayer extends StatelessWidget {
                   children: [
                     // Album art with Hero animation
                     Hero(
-                      tag: 'now_playing_art',
+                      tag: HeroTags.nowPlayingArt,
+                      flightShuttleBuilder: (
+                        flightContext,
+                        animation,
+                        flightDirection,
+                        fromHeroContext,
+                        toHeroContext,
+                      ) {
+                        final Hero toHero = toHeroContext.widget as Hero;
+                        return ScaleTransition(
+                          scale: animation.drive(
+                            Tween<double>(begin: 0.0, end: 1.0).chain(
+                              CurveTween(curve: Curves.fastOutSlowIn),
+                            ),
+                          ),
+                          child: toHero.child,
+                        );
+                      },
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: imageUrl != null
@@ -70,6 +87,9 @@ class MiniPlayer extends StatelessWidget {
                                 width: 48,
                                 height: 48,
                                 fit: BoxFit.cover,
+                                cacheWidth: 96,
+                                cacheHeight: 96,
+                                filterQuality: FilterQuality.medium,
                                 errorBuilder: (context, error, stackTrace) {
                                   return Container(
                                     width: 48,
@@ -142,58 +162,76 @@ class MiniPlayer extends StatelessWidget {
                     // Volume control (compact mute button)
                     const VolumeControl(compact: true),
                     // Playback controls for selected player
-                    AnimatedIconButton(
-                      icon: Icons.skip_previous_rounded,
-                      color: Colors.white,
-                      iconSize: 26,
-                      onPressed: () async {
-                        try {
-                          await maProvider.previousTrackSelectedPlayer();
-                        } catch (e) {
-                          print('❌ Error in previous track: $e');
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Error: $e')),
-                            );
-                          }
-                        }
-                      },
+                    Hero(
+                      tag: HeroTags.nowPlayingPreviousButton,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: AnimatedIconButton(
+                          icon: Icons.skip_previous_rounded,
+                          color: Colors.white,
+                          iconSize: 26,
+                          onPressed: () async {
+                            try {
+                              await maProvider.previousTrackSelectedPlayer();
+                            } catch (e) {
+                              print('❌ Error in previous track: $e');
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Error: $e')),
+                                );
+                              }
+                            }
+                          },
+                        ),
+                      ),
                     ),
-                    AnimatedIconButton(
-                      icon: selectedPlayer.isPlaying
-                          ? Icons.pause_rounded
-                          : Icons.play_arrow_rounded,
-                      color: Colors.white,
-                      iconSize: 32,
-                      onPressed: () async {
-                        try {
-                          await maProvider.playPauseSelectedPlayer();
-                        } catch (e) {
-                          print('❌ Error in play/pause: $e');
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Error: $e')),
-                            );
-                          }
-                        }
-                      },
+                    Hero(
+                      tag: HeroTags.nowPlayingPlayButton,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: AnimatedIconButton(
+                          icon: selectedPlayer.isPlaying
+                              ? Icons.pause_rounded
+                              : Icons.play_arrow_rounded,
+                          color: Colors.white,
+                          iconSize: 32,
+                          onPressed: () async {
+                            try {
+                              await maProvider.playPauseSelectedPlayer();
+                            } catch (e) {
+                              print('❌ Error in play/pause: $e');
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Error: $e')),
+                                );
+                              }
+                            }
+                          },
+                        ),
+                      ),
                     ),
-                    AnimatedIconButton(
-                      icon: Icons.skip_next_rounded,
-                      color: Colors.white,
-                      iconSize: 28,
-                      onPressed: () async {
-                        try {
-                          await maProvider.nextTrackSelectedPlayer();
-                        } catch (e) {
-                          print('❌ Error in next track: $e');
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Error: $e')),
-                            );
-                          }
-                        }
-                      },
+                    Hero(
+                      tag: HeroTags.nowPlayingNextButton,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: AnimatedIconButton(
+                          icon: Icons.skip_next_rounded,
+                          color: Colors.white,
+                          iconSize: 28,
+                          onPressed: () async {
+                            try {
+                              await maProvider.nextTrackSelectedPlayer();
+                            } catch (e) {
+                              print('❌ Error in next track: $e');
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Error: $e')),
+                                );
+                              }
+                            }
+                          },
+                        ),
+                      ),
                     ),
                   ],
                 ),

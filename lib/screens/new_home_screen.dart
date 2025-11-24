@@ -117,6 +117,7 @@ class NewHomeScreen extends StatelessWidget {
   Widget _buildConnectedView(
       BuildContext context, MusicAssistantProvider provider) {
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
