@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/music_assistant_provider.dart';
 import '../widgets/player_selector.dart';
 import '../widgets/album_row.dart';
-import '../widgets/library_stats.dart';
+import '../widgets/artist_row.dart';
 import 'settings_screen.dart';
 import 'search_screen.dart';
 
@@ -122,42 +122,6 @@ class NewHomeScreen extends StatelessWidget {
         children: [
           const SizedBox(height: 16),
 
-          // Welcome message
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text(
-              'Welcome',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.w300,
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text(
-              'Discover your music',
-              style: TextStyle(
-                color: Colors.grey[400],
-                fontSize: 16,
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Library stats
-          LibraryStats(
-            loadStats: () async {
-              if (provider.api == null) {
-                return {'artists': 0, 'albums': 0, 'tracks': 0};
-              }
-              return await provider.api!.getLibraryStats();
-            },
-          ),
-          const SizedBox(height: 24),
-
           // Recently played albums
           AlbumRow(
             title: 'Recently Played',
@@ -168,22 +132,22 @@ class NewHomeScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // Random albums
-          AlbumRow(
-            title: 'Discover',
-            loadAlbums: () async {
+          // Discover Artists
+          ArtistRow(
+            title: 'Discover Artists',
+            loadArtists: () async {
               if (provider.api == null) return [];
-              return await provider.api!.getRandomAlbums(limit: 10);
+              return await provider.api!.getRandomArtists(limit: 10);
             },
           ),
           const SizedBox(height: 16),
 
-          // All albums
+          // Discover Albums
           AlbumRow(
-            title: 'Albums',
+            title: 'Discover Albums',
             loadAlbums: () async {
               if (provider.api == null) return [];
-              return await provider.api!.getAlbums(limit: 20);
+              return await provider.api!.getRandomAlbums(limit: 10);
             },
           ),
           const SizedBox(height: 80), // Space for mini player

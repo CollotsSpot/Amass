@@ -16,14 +16,11 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final _serverUrlController = TextEditingController();
-  final _authServerUrlController = TextEditingController();
-  final _wsPortController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _authService = AuthService();
   final _logger = DebugLogger();
   bool _isConnecting = false;
-  bool _requiresAuth = false;
 
   @override
   void initState() {
@@ -35,22 +32,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final provider = context.read<MusicAssistantProvider>();
     _serverUrlController.text = provider.serverUrl ?? '';
 
-    final authServerUrl = await SettingsService.getAuthServerUrl();
-    if (authServerUrl != null) {
-      _authServerUrlController.text = authServerUrl;
-    }
-
-    final wsPort = await SettingsService.getWebSocketPort();
-    if (wsPort != null) {
-      _wsPortController.text = wsPort.toString();
-    }
-
     final username = await SettingsService.getUsername();
     if (username != null) {
       _usernameController.text = username;
-      setState(() {
-        _requiresAuth = true;
-      });
     }
 
     final password = await SettingsService.getPassword();
@@ -62,8 +46,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void dispose() {
     _serverUrlController.dispose();
-    _authServerUrlController.dispose();
-    _wsPortController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -74,21 +56,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _showError('Please enter a server URL');
       return;
     }
-
-    // Save auth server URL setting
-    final authServerUrl = _authServerUrlController.text.trim();
-    await SettingsService.setAuthServerUrl(authServerUrl.isNotEmpty ? authServerUrl : null);
-
-    // Save WebSocket port setting
-    int? wsPort;
-    if (_wsPortController.text.isNotEmpty) {
-      wsPort = int.tryParse(_wsPortController.text);
-      if (wsPort == null) {
-        _showError('Invalid WebSocket port number');
-        return;
-      }
-    }
-    await SettingsService.setWebSocketPort(wsPort);
 
     setState(() {
       _isConnecting = true;
@@ -288,185 +255,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               enabled: !_isConnecting,
             ),
 
-            const SizedBox(height: 24),
-
-            // Auth Server URL input (for Authelia)
-            const Text(
-              'Auth Server URL (Optional)',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Only needed if using Authelia on a separate domain',
-              style: TextStyle(
-                color: Colors.white54,
-                fontSize: 12,
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            TextField(
-              controller: _authServerUrlController,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: 'e.g., auth.example.com',
-                hintStyle: const TextStyle(color: Colors.white38),
-                filled: true,
-                fillColor: Colors.white12,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                prefixIcon: const Icon(
-                  Icons.security_rounded,
-                  color: Colors.white54,
-                ),
-              ),
-              enabled: !_isConnecting,
-            ),
-
-            const SizedBox(height: 24),
-
-            // WebSocket Port input
-            const Text(
-              'WebSocket Port (Optional)',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Leave empty for auto-detection. Try 8095 if connection fails.',
-              style: TextStyle(
-                color: Colors.white54,
-                fontSize: 12,
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            TextField(
-              controller: _wsPortController,
-              style: const TextStyle(color: Colors.white),
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                hintText: 'e.g., 8095 or 443 (leave empty for auto)',
-                hintStyle: const TextStyle(color: Colors.white38),
-                filled: true,
-                fillColor: Colors.white12,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                prefixIcon: const Icon(
-                  Icons.settings_ethernet_rounded,
-                  color: Colors.white54,
-                ),
-              ),
-              enabled: !_isConnecting,
-            ),
-
-            const SizedBox(height: 24),
-
-            // Authentication section header
-            Row(
-              children: [
-                const Text(
-                  'Authentication (Optional)',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Checkbox(
-                  value: _requiresAuth,
-                  onChanged: (value) {
-                    setState(() {
-                      _requiresAuth = value ?? false;
-                      if (!_requiresAuth) {
-                        _usernameController.clear();
-                        _passwordController.clear();
-                      }
-                    });
-                  },
-                  fillColor: MaterialStateProperty.all(Colors.white),
-                  checkColor: const Color(0xFF1a1a1a),
-                ),
-                const Text(
-                  'Required',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Required if your server uses authentication (e.g., Authelia, HTTP Basic Auth)',
-              style: TextStyle(
-                color: Colors.white54,
-                fontSize: 12,
-              ),
-            ),
-
-            if (_requiresAuth) ...[
-              const SizedBox(height: 16),
-
-              // Username field
-              TextField(
-                controller: _usernameController,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'Username',
-                  hintStyle: const TextStyle(color: Colors.white38),
-                  filled: true,
-                  fillColor: Colors.white12,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  prefixIcon: const Icon(
-                    Icons.person_outline_rounded,
-                    color: Colors.white54,
-                  ),
-                ),
-                enabled: !_isConnecting,
-              ),
-
-              const SizedBox(height: 12),
-
-              // Password field
-              TextField(
-                controller: _passwordController,
-                style: const TextStyle(color: Colors.white),
-                obscureText: true,
-                decoration: InputDecoration(
-                  hintText: 'Password',
-                  hintStyle: const TextStyle(color: Colors.white38),
-                  filled: true,
-                  fillColor: Colors.white12,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  prefixIcon: const Icon(
-                    Icons.lock_outline_rounded,
-                    color: Colors.white54,
-                  ),
-                ),
-                enabled: !_isConnecting,
-              ),
-            ],
-
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
 
             // Connect button
             SizedBox(

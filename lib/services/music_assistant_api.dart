@@ -289,6 +289,30 @@ class MusicAssistantAPI {
     }
   }
 
+  Future<List<Artist>> getRandomArtists({int limit = 10}) async {
+    try {
+      _logger.log('Fetching random artists (limit=$limit)');
+      final response = await _sendCommand(
+        'music/artists/library_items',
+        args: {
+          'limit': limit,
+          'order_by': 'random',
+        },
+      );
+
+      final items = response['result'] as List<dynamic>?;
+      if (items == null) return [];
+
+      _logger.log('Got ${items.length} random artists');
+      return items
+          .map((item) => Artist.fromJson(item as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      _logger.log('Error getting random artists: $e');
+      return [];
+    }
+  }
+
   Future<List<Album>> getAlbums({
     int? limit,
     int? offset,
