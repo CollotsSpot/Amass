@@ -48,6 +48,7 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/amass-logo.png
 
 flutter_icons:
   android: true
