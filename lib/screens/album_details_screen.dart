@@ -514,32 +514,16 @@ class _AlbumDetailsScreenState extends State<AlbumDetailsScreen> with SingleTick
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
                       title: Text(player.name),
-                      onTap: () async {
+                      onTap: () {
                         Navigator.pop(context);
                         // Set this as the active player
                         maProvider.selectPlayer(player);
-
-                        try {
-                          // Play album from this track onwards
-                          await maProvider.playTracks(
-                            player.playerId,
-                            _tracks,
-                            startIndex: startIndex,
-                          );
-
-                          // Close the expanded state
-                          setState(() {
-                            _expandedTrackIndex = null;
-                          });
-
-                          // Close the album screen
-                          if (mounted) {
-                            Navigator.pop(context);
-                          }
-                        } catch (e) {
-                          print('Error playing album from track: $e');
-                          _showError('Failed to play album: $e');
-                        }
+                        // Play album from this track onwards
+                        maProvider.playTracks(
+                          player.playerId,
+                          _tracks,
+                          startIndex: startIndex,
+                        );
                       },
                     );
                   },
@@ -592,31 +576,15 @@ class _AlbumDetailsScreenState extends State<AlbumDetailsScreen> with SingleTick
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
                       title: Text(player.name),
-                      onTap: () async {
+                      onTap: () {
                         Navigator.pop(context);
                         // Set this as the active player
                         maProvider.selectPlayer(player);
-
-                        try {
-                          // Play radio based on this track
-                          await maProvider.playRadio(
-                            player.playerId,
-                            track,
-                          );
-
-                          // Close the expanded state
-                          setState(() {
-                            _expandedTrackIndex = null;
-                          });
-
-                          // Close the album screen
-                          if (mounted) {
-                            Navigator.pop(context);
-                          }
-                        } catch (e) {
-                          print('Error playing radio: $e');
-                          _showError('Failed to play radio: $e');
-                        }
+                        // Play radio based on this track
+                        maProvider.playRadio(
+                          player.playerId,
+                          track,
+                        );
                       },
                     );
                   },
