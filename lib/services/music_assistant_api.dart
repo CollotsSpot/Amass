@@ -273,9 +273,10 @@ class MusicAssistantAPI {
     int? offset,
     String? search,
     bool? favoriteOnly,
+    bool albumArtistsOnly = true,
   }) async {
     try {
-      _logger.log('Fetching artists with limit=$limit, offset=$offset, search=$search');
+      _logger.log('Fetching artists with limit=$limit, offset=$offset, search=$search, albumArtistsOnly=$albumArtistsOnly');
       final response = await _sendCommand(
         'music/artists/library_items',
         args: {
@@ -283,6 +284,7 @@ class MusicAssistantAPI {
           if (offset != null) 'offset': offset,
           if (search != null) 'search': search,
           if (favoriteOnly != null) 'favorite': favoriteOnly,
+          'album_artists_only': albumArtistsOnly,
         },
       );
 
@@ -303,14 +305,15 @@ class MusicAssistantAPI {
     }
   }
 
-  Future<List<Artist>> getRandomArtists({int limit = 10}) async {
+  Future<List<Artist>> getRandomArtists({int limit = 10, bool albumArtistsOnly = true}) async {
     try {
-      _logger.log('Fetching random artists (limit=$limit)');
+      _logger.log('Fetching random artists (limit=$limit, albumArtistsOnly=$albumArtistsOnly)');
       final response = await _sendCommand(
         'music/artists/library_items',
         args: {
           'limit': limit,
           'order_by': 'random',
+          'album_artists_only': albumArtistsOnly,
         },
       );
 
@@ -916,18 +919,20 @@ class MusicAssistantAPI {
   }
 
   /// Play a single track via queue
-  Future<void> playTrack(String playerId, Track track) async {
+  /// If clearQueue is true, replaces the queue (default behavior)
+  Future<void> playTrack(String playerId, Track track, {bool clearQueue = true}) async {
     try {
       // Build URI from provider mappings
       final uri = _buildTrackUri(track);
-      _logger.log('Playing track via queue: $uri on player $playerId');
+      final option = clearQueue ? 'replace' : 'play';
+      _logger.log('Playing track via queue: $uri on player $playerId (option: $option)');
 
       await _sendCommand(
         'player_queues/play_media',
         args: {
           'queue_id': playerId,
           'media': [uri], // Array of URI strings, not objects
-          'option': 'play', // Play immediately
+          'option': option, // 'replace' clears queue, 'play' adds to queue
         },
       );
 
@@ -939,20 +944,22 @@ class MusicAssistantAPI {
   }
 
   /// Play multiple tracks via queue
-  Future<void> playTracks(String playerId, List<Track> tracks, {int? startIndex}) async {
+  /// If clearQueue is true, replaces the queue (default behavior)
+  Future<void> playTracks(String playerId, List<Track> tracks, {int? startIndex, bool clearQueue = true}) async {
     return await RetryHelper.retryCritical(
       operation: () async {
         // Build array of URI strings (not objects!)
         final mediaUris = tracks.map((track) => _buildTrackUri(track)).toList();
 
-        _logger.log('Playing ${tracks.length} tracks via queue on player $playerId');
+        final option = clearQueue ? 'replace' : 'play';
+        _logger.log('Playing ${tracks.length} tracks via queue on player $playerId (option: $option)');
 
         await _sendCommand(
           'player_queues/play_media',
           args: {
             'queue_id': playerId,
             'media': mediaUris, // Array of URI strings
-            'option': 'play', // Play immediately
+            'option': option, // 'replace' clears queue, 'play' adds to queue
             if (startIndex != null) 'start_item': startIndex,
           },
         );

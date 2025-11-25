@@ -265,9 +265,9 @@ class MusicAssistantProvider with ChangeNotifier {
     return await _api?.getQueue(playerId);
   }
 
-  Future<void> playTrack(String playerId, Track track) async {
+  Future<void> playTrack(String playerId, Track track, {bool clearQueue = true}) async {
     try {
-      await _api?.playTrack(playerId, track);
+      await _api?.playTrack(playerId, track, clearQueue: clearQueue);
     } catch (e) {
       final errorInfo = ErrorHandler.handleError(e, context: 'Play track');
       _error = errorInfo.userMessage;
@@ -277,9 +277,9 @@ class MusicAssistantProvider with ChangeNotifier {
     }
   }
 
-  Future<void> playTracks(String playerId, List<Track> tracks, {int? startIndex}) async {
+  Future<void> playTracks(String playerId, List<Track> tracks, {int? startIndex, bool clearQueue = true}) async {
     try {
-      await _api?.playTracks(playerId, tracks, startIndex: startIndex);
+      await _api?.playTracks(playerId, tracks, startIndex: startIndex, clearQueue: clearQueue);
     } catch (e) {
       final errorInfo = ErrorHandler.handleError(e, context: 'Play tracks');
       _error = errorInfo.userMessage;
