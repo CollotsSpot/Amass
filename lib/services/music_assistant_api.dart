@@ -952,16 +952,20 @@ class MusicAssistantAPI {
         final mediaUris = tracks.map((track) => _buildTrackUri(track)).toList();
 
         final option = clearQueue ? 'replace' : 'play';
-        _logger.log('Playing ${tracks.length} tracks via queue on player $playerId (option: $option)');
+        _logger.log('Playing ${tracks.length} tracks via queue on player $playerId (option: $option, startIndex: $startIndex)');
+
+        final args = {
+          'queue_id': playerId,
+          'media': mediaUris, // Array of URI strings
+          'option': option, // 'replace' clears queue, 'play' adds to queue
+          if (startIndex != null) 'start_item': startIndex,
+        };
+
+        _logger.log('📤 Sending play_media command with args: $args');
 
         await _sendCommand(
           'player_queues/play_media',
-          args: {
-            'queue_id': playerId,
-            'media': mediaUris, // Array of URI strings
-            'option': option, // 'replace' clears queue, 'play' adds to queue
-            if (startIndex != null) 'start_item': startIndex,
-          },
+          args: args,
         );
 
         _logger.log('✓ ${tracks.length} tracks queued successfully');
@@ -976,14 +980,18 @@ class MusicAssistantAPI {
         final trackUri = _buildTrackUri(track);
         _logger.log('Playing radio based on track: $trackUri on player $playerId');
 
+        final args = {
+          'queue_id': playerId,
+          'media': [trackUri],
+          'option': 'replace',
+          'radio_mode': true, // Enable radio mode for similar tracks
+        };
+
+        _logger.log('📤 Sending play_media command (RADIO MODE) with args: $args');
+
         await _sendCommand(
           'player_queues/play_media',
-          args: {
-            'queue_id': playerId,
-            'media': [trackUri],
-            'option': 'replace',
-            'radio_mode': true, // Enable radio mode for similar tracks
-          },
+          args: args,
         );
 
         _logger.log('✓ Radio mode started successfully');
