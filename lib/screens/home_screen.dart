@@ -24,6 +24,10 @@ class _HomeScreenState extends State<HomeScreen> {
       canPop: _selectedIndex == 0,
       onPopInvoked: (didPop) {
         if (didPop) return;
+        
+        // Dismiss keyboard when handling back button navigation between tabs
+        FocusScope.of(context).unfocus();
+        
         setState(() {
           _selectedIndex = 0;
         });
