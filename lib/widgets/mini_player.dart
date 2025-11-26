@@ -51,6 +51,7 @@ class MiniPlayer extends StatelessWidget {
             ),
             child: Hero(
               tag: HeroTags.nowPlayingBackground,
+              transitionOnUserGestures: true,
               flightShuttleBuilder: (context, animation, direction, fromContext, toContext) {
                 return Material(
                   color: Colors.transparent,
