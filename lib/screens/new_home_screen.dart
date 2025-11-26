@@ -54,17 +54,6 @@ class _NewHomeScreenState extends State<NewHomeScreen> with AutomaticKeepAliveCl
         titleSpacing: 0,
         centerTitle: false,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SearchScreen(autofocus: true),
-                ),
-              );
-            },
-          ),
           const PlayerSelector(),
         ],
       ),
