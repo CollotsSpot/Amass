@@ -35,26 +35,30 @@ class MiniPlayer extends StatelessWidget {
               ),
             );
           },
-          child: Hero(
-            tag: HeroTags.nowPlayingBackground,
-            child: Material(
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
               color: colorScheme.surface,
-              elevation: 0,
-              child: Container(
-                height: 64,
-                decoration: BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, -2),
-                    ),
-                  ],
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
-                child: Column(
-                  children: [
-                    // Status indicator bar
-                    Container(
+              ],
+            ),
+            child: Hero(
+              tag: HeroTags.nowPlayingBackground,
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Column(
+                    children: [
+                      // Status indicator bar
+                      Container(
                       height: 2,
                       color: selectedPlayer.isPlaying
                           ? colorScheme.primary.withOpacity(0.7)
@@ -223,7 +227,8 @@ class MiniPlayer extends StatelessWidget {
                         ),
                       ),
                     ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

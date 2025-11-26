@@ -49,16 +49,17 @@ class _HomeScreenState extends State<HomeScreen> {
               SearchScreen(key: _searchScreenKey),
             if (_selectedIndex == 3)
               const SettingsScreen(),
+            // Floating mini player - positioned above bottom nav, hidden on settings
+            if (_selectedIndex != 3)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: kBottomNavigationBarHeight,
+                child: const MiniPlayer(),
+              ),
           ],
         ),
-        bottomNavigationBar: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Mini player
-            const MiniPlayer(),
-
-            // Bottom navigation bar
-            Container(
+        bottomNavigationBar: Container(
               decoration: BoxDecoration(
                 color: colorScheme.surface,
                 boxShadow: [
@@ -115,8 +116,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-          ],
-        ),
       ),
     );
   }

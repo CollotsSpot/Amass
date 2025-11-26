@@ -6,6 +6,7 @@ import '../constants/hero_tags.dart';
 import '../theme/palette_helper.dart';
 import '../theme/theme_provider.dart';
 import '../services/metadata_service.dart';
+import '../widgets/mini_player.dart';
 import 'artist_details_screen.dart';
 
 class AlbumDetailsScreen extends StatefulWidget {
@@ -329,7 +330,9 @@ class _AlbumDetailsScreenState extends State<AlbumDetailsScreen> with SingleTick
 
     return Scaffold(
       backgroundColor: colorScheme.background,
-      body: CustomScrollView(
+      body: Stack(
+        children: [
+          CustomScrollView(
         slivers: [
           SliverAppBar(
             expandedHeight: 350, // Increased height for bigger art
@@ -841,9 +844,18 @@ class _AlbumDetailsScreenState extends State<AlbumDetailsScreen> with SingleTick
                   },
                 ),
               ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 80), // Extra space for floating mini player
           ],
         ),
+          ),
+          // Floating mini player at bottom of screen
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: const MiniPlayer(),
+          ),
+        ],
       ),
     );
   }
