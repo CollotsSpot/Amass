@@ -230,6 +230,12 @@ class MusicAssistantAPI {
       final eventType = data['event'] as String?;
       if (eventType != null) {
         _logger.log('Event received: $eventType');
+        
+        // Debug: Log full data for player events to inspect state values
+        if (eventType == 'player_added' || eventType == 'player_updated' || eventType == 'builtin_player') {
+           _logger.log('Event data: ${jsonEncode(data['data'])}');
+        }
+        
         _eventStreams[eventType]?.add(data['data'] as Map<String, dynamic>);
       }
     } catch (e) {
