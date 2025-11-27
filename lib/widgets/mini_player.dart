@@ -33,7 +33,7 @@ class MiniPlayer extends StatelessWidget {
               PageRouteBuilder(
                 pageBuilder: (context, animation, secondaryAnimation) => const NowPlayingScreen(),
                 transitionDuration: const Duration(milliseconds: 500),
-                reverseTransitionDuration: const Duration(milliseconds: 500),
+                reverseTransitionDuration: const Duration(milliseconds: 350),
                 transitionsBuilder: (context, animation, secondaryAnimation, child) {
                   return child;
                 },
@@ -58,10 +58,11 @@ class MiniPlayer extends StatelessWidget {
               tag: HeroTags.nowPlayingBackground,
               transitionOnUserGestures: true,
               flightShuttleBuilder: (context, animation, direction, fromContext, toContext) {
-                return Material(
-                  color: Colors.transparent,
-                  child: toContext.widget,
-                );
+                // Use the destination widget for smooth transition in both directions
+                final Widget childWidget = direction == HeroFlightDirection.push
+                    ? toContext.widget
+                    : fromContext.widget;
+                return childWidget;
               },
               child: Material(
                 color: Colors.transparent,
