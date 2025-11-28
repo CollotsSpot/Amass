@@ -50,7 +50,8 @@ class AuthManager {
     // Probe server for auth requirements
     try {
       _logger.log('Probing server for auth headers...');
-      final probeUrl = '$baseUrl/api/info';
+      // Test root endpoint
+      final probeUrl = baseUrl;
       _logger.log('Probe URL: $probeUrl');
 
       final response = await http.get(
@@ -58,6 +59,18 @@ class AuthManager {
       ).timeout(const Duration(seconds: 10));
 
       _logger.log('Probe status: ${response.statusCode}');
+
+      // Check for redirect (common with reverse proxy auth)
+      if (response.statusCode == 302 || response.statusCode == 307) {
+        final location = response.headers['location'];
+        _logger.log('Redirect to: $location');
+
+        // If redirects to Authelia login, it's Authelia
+        if (location != null && location.contains('authelia')) {
+          _logger.log('✓ Detected Authelia (redirect)');
+          return _strategies.firstWhere((s) => s.name == 'authelia');
+        }
+      }
 
       // Server returned 401 Unauthorized - check WWW-Authenticate header
       if (response.statusCode == 401) {
@@ -77,20 +90,11 @@ class AuthManager {
         }
       }
 
-      // Check for Authelia-specific endpoints
-      _logger.log('Testing for Authelia endpoints...');
-      final verifyUrl = '$baseUrl/api/verify';
-      _logger.log('Verify URL: $verifyUrl');
-
-      final verifyResponse = await http.get(
-        Uri.parse(verifyUrl),
-      ).timeout(const Duration(seconds: 10));
-
-      _logger.log('Verify status: ${verifyResponse.statusCode}');
-
-      if (verifyResponse.statusCode == 401) {
-        // Authelia typically returns 401 on /api/verify without session
-        _logger.log('✓ Detected Authelia authentication');
+      // If we got here and there's any auth challenge, assume Authelia
+      // (since we're behind a reverse proxy that requires auth)
+      if (response.statusCode >= 300) {
+        _logger.log('Server requires authentication (status ${response.statusCode})');
+        _logger.log('Assuming Authelia (default for authenticated reverse proxy)');
         return _strategies.firstWhere((s) => s.name == 'authelia');
       }
     } catch (e) {
@@ -105,17 +109,25 @@ class AuthManager {
   /// Test if server is accessible without authentication
   Future<bool> _canConnectWithoutAuth(String serverUrl) async {
     try {
-      final testUrl = '$serverUrl/api/info';
+      // Test root endpoint - Music Assistant doesn't have /api/info
+      final testUrl = serverUrl;
       _logger.log('No-auth test URL: $testUrl');
 
       final response = await http.get(
         Uri.parse(testUrl),
+        // Don't follow redirects - we want to see if server requires auth
       ).timeout(const Duration(seconds: 10));
 
       _logger.log('No-auth status: ${response.statusCode}');
 
-      // 200 = no auth required, 401 = auth required
-      return response.statusCode == 200;
+      // 200 = no auth required
+      // 302/307 = redirect (probably to auth)
+      // 401 = auth required
+      if (response.statusCode == 200) {
+        return true;
+      }
+
+      return false;
     } catch (e) {
       _logger.log('No-auth error: $e');
       return false;

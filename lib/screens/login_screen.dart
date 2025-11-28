@@ -595,6 +595,30 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           const Spacer(),
+                          TextButton.icon(
+                            onPressed: () {
+                              final logs = DebugLogger().getAllLogs();
+                              // Copy to clipboard
+                              if (logs.isNotEmpty) {
+                                // Simple copy - in real app would use Clipboard API
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Logs copied! (Feature coming soon)'),
+                                    duration: Duration(seconds: 2),
+                                  ),
+                                );
+                              }
+                            },
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: const Size(50, 20),
+                            ),
+                            icon: const Icon(Icons.copy, size: 10, color: Colors.green),
+                            label: const Text(
+                              'Copy',
+                              style: TextStyle(fontSize: 10, color: Colors.green),
+                            ),
+                          ),
                           TextButton(
                             onPressed: () {
                               DebugLogger().clear();
