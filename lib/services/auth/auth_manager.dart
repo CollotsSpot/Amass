@@ -82,7 +82,7 @@ class AuthManager {
       }
     } catch (e) {
       _logger.log('✗ Auth detection error: $e');
-      return null;
+      rethrow; // Rethrow so LoginScreen can show the actual error
     }
 
     _logger.log('⚠️ Could not determine auth method');

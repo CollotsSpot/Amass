@@ -73,6 +73,36 @@ class _LoginScreenState extends State<LoginScreen> {
     return 'https://$url';
   }
 
+  String _buildServerUrl() {
+    // Normalize the base URL
+    var url = _normalizeServerUrl(_serverUrlController.text.trim());
+
+    // Parse to check if port is already included
+    final uri = Uri.parse(url);
+
+    // Get port from field
+    final portText = _portController.text.trim();
+    if (portText.isEmpty) {
+      return url; // No port specified, use URL as-is
+    }
+
+    final port = int.tryParse(portText);
+    if (port == null) {
+      return url; // Invalid port, use URL as-is
+    }
+
+    // Skip adding port if it's the default for the scheme
+    final isDefaultPort = (uri.scheme == 'https' && port == 443) ||
+                          (uri.scheme == 'http' && port == 80);
+
+    if (isDefaultPort) {
+      return url; // Don't add default ports
+    }
+
+    // Build URL with custom port
+    return '${uri.scheme}://${uri.host}:$port';
+  }
+
   Future<void> _detectAuthRequirements() async {
     if (_serverUrlController.text.trim().isEmpty) {
       setState(() {
@@ -89,7 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final serverUrl = _normalizeServerUrl(_serverUrlController.text.trim());
+      final serverUrl = _buildServerUrl();
       final provider = context.read<MusicAssistantProvider>();
 
       // Auto-detect authentication requirements
@@ -161,7 +191,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final serverUrl = _normalizeServerUrl(_serverUrlController.text.trim());
+      final serverUrl = _buildServerUrl();
       final port = _portController.text.trim();
 
       // Validate port
