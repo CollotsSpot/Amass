@@ -6,7 +6,6 @@ import '../constants/hero_tags.dart';
 import '../theme/palette_helper.dart';
 import '../theme/theme_provider.dart';
 import '../services/metadata_service.dart';
-import '../widgets/expandable_player.dart';
 import 'artist_details_screen.dart';
 
 class AlbumDetailsScreen extends StatefulWidget {
@@ -715,11 +714,7 @@ class _AlbumDetailsScreenState extends State<AlbumDetailsScreen> with SingleTick
                 childCount: _tracks.length,
               ),
             ),
-          const SliverToBoxAdapter(child: SizedBox(height: 80)), // Extra space for expandable player
-        ],
-      ),
-          // Expandable player at bottom of screen
-          const ExpandablePlayer(),
+          const SliverToBoxAdapter(child: SizedBox(height: 140)), // Extra space for mini player + bottom nav
         ],
       ),
     );

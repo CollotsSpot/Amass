@@ -8,6 +8,7 @@ import 'services/settings_service.dart';
 import 'theme/theme_provider.dart';
 import 'theme/app_theme.dart';
 import 'theme/system_theme_helper.dart';
+import 'widgets/global_player_overlay.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -122,6 +123,10 @@ class _MusicAssistantAppState extends State<MusicAssistantApp> with WidgetsBindi
                 themeMode: themeProvider.themeMode,
                 theme: AppTheme.lightTheme(colorScheme: lightColorScheme),
                 darkTheme: AppTheme.darkTheme(colorScheme: darkColorScheme),
+                builder: (context, child) {
+                  // Wrap entire app with global player overlay
+                  return GlobalPlayerOverlay(child: child ?? const SizedBox.shrink());
+                },
                 home: const AppStartup(),
               );
             },

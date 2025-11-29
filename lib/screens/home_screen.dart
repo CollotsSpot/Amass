@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/expandable_player.dart';
+import '../widgets/global_player_overlay.dart';
 import 'new_home_screen.dart';
 import 'new_library_screen.dart';
 import 'search_screen.dart';
@@ -15,7 +15,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   final GlobalKey<SearchScreenState> _searchScreenKey = GlobalKey<SearchScreenState>();
-  final GlobalKey<ExpandablePlayerState> _playerKey = GlobalKey<ExpandablePlayerState>();
   DateTime? _lastBackPress;
 
   void _showExitSnackBar() {
@@ -40,9 +39,9 @@ class _HomeScreenState extends State<HomeScreen> {
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
 
-        // If player is expanded, collapse it first
-        if (_playerKey.currentState?.isExpanded == true) {
-          _playerKey.currentState?.collapse();
+        // If global player is expanded, collapse it first
+        if (GlobalPlayerOverlay.isPlayerExpanded) {
+          GlobalPlayerOverlay.collapsePlayer();
           return;
         }
 
@@ -66,94 +65,85 @@ class _HomeScreenState extends State<HomeScreen> {
           _showExitSnackBar();
         }
       },
-      child: Stack(
-        children: [
-          // Main scaffold with bottom nav
-          Scaffold(
-            backgroundColor: colorScheme.background,
-            body: Stack(
-              children: [
-                // Home and Library use IndexedStack for state preservation
-                Offstage(
-                  offstage: _selectedIndex > 1,
-                  child: IndexedStack(
-                    index: _selectedIndex.clamp(0, 1),
-                    children: const [
-                      NewHomeScreen(),
-                      NewLibraryScreen(),
-                    ],
-                  ),
-                ),
-                // Search and Settings are conditionally rendered (removed from tree when not visible)
-                if (_selectedIndex == 2)
-                  SearchScreen(key: _searchScreenKey),
-                if (_selectedIndex == 3)
-                  const SettingsScreen(),
-              ],
-            ),
-            bottomNavigationBar: Container(
-              decoration: BoxDecoration(
-                color: colorScheme.surface,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: BottomNavigationBar(
-                currentIndex: _selectedIndex,
-                onTap: (index) {
-                  setState(() {
-                    _selectedIndex = index;
-                  });
-
-                  // Auto-focus search field when switching to search tab
-                  if (index == 2) {
-                    // Use post-frame callback to ensure SearchScreen is built first
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      _searchScreenKey.currentState?.requestFocus();
-                    });
-                  }
-                },
-                backgroundColor: Colors.transparent,
-                selectedItemColor: colorScheme.primary,
-                unselectedItemColor: colorScheme.onSurface.withOpacity(0.54),
-                elevation: 0,
-                type: BottomNavigationBarType.fixed,
-                selectedFontSize: 12,
-                unselectedFontSize: 12,
-                items: const [
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.home_outlined),
-                    activeIcon: Icon(Icons.home_rounded),
-                    label: 'Home',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.library_music_outlined),
-                    activeIcon: Icon(Icons.library_music_rounded),
-                    label: 'Library',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.search_rounded),
-                    activeIcon: Icon(Icons.search_rounded),
-                    label: 'Search',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.settings_outlined),
-                    activeIcon: Icon(Icons.settings_rounded),
-                    label: 'Settings',
-                  ),
+      child: Scaffold(
+        backgroundColor: colorScheme.background,
+        body: Stack(
+          children: [
+            // Home and Library use IndexedStack for state preservation
+            Offstage(
+              offstage: _selectedIndex > 1,
+              child: IndexedStack(
+                index: _selectedIndex.clamp(0, 1),
+                children: const [
+                  NewHomeScreen(),
+                  NewLibraryScreen(),
                 ],
               ),
             ),
+            // Search and Settings are conditionally rendered (removed from tree when not visible)
+            if (_selectedIndex == 2)
+              SearchScreen(key: _searchScreenKey),
+            if (_selectedIndex == 3)
+              const SettingsScreen(),
+          ],
+        ),
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, -2),
+              ),
+            ],
           ),
-          // Expandable player overlay - on top of everything including bottom nav
-          // Hidden on settings screen
-          if (_selectedIndex != 3)
-            ExpandablePlayer(key: _playerKey, hasBottomNav: true),
-        ],
+          child: BottomNavigationBar(
+            currentIndex: _selectedIndex,
+            onTap: (index) {
+              setState(() {
+                _selectedIndex = index;
+              });
+
+              // Auto-focus search field when switching to search tab
+              if (index == 2) {
+                // Use post-frame callback to ensure SearchScreen is built first
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _searchScreenKey.currentState?.requestFocus();
+                });
+              }
+            },
+            backgroundColor: Colors.transparent,
+            selectedItemColor: colorScheme.primary,
+            unselectedItemColor: colorScheme.onSurface.withOpacity(0.54),
+            elevation: 0,
+            type: BottomNavigationBarType.fixed,
+            selectedFontSize: 12,
+            unselectedFontSize: 12,
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home_outlined),
+                activeIcon: Icon(Icons.home_rounded),
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.library_music_outlined),
+                activeIcon: Icon(Icons.library_music_rounded),
+                label: 'Library',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.search_rounded),
+                activeIcon: Icon(Icons.search_rounded),
+                label: 'Search',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.settings_outlined),
+                activeIcon: Icon(Icons.settings_rounded),
+                label: 'Settings',
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

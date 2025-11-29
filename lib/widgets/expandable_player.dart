@@ -11,17 +11,11 @@ import 'volume_control.dart';
 
 /// A unified player widget that seamlessly expands from mini to full-screen.
 ///
-/// Uses smooth morphing animations where each element (album art, track info,
-/// controls) transitions smoothly from their mini to full positions.
+/// This widget is designed to be used as a global overlay, positioned above
+/// the bottom navigation bar. It uses smooth morphing animations where each
+/// element transitions from their mini to full positions.
 class ExpandablePlayer extends StatefulWidget {
-  /// Whether there's a bottom navigation bar below this player.
-  /// When true, the collapsed player will be positioned above the nav bar.
-  final bool hasBottomNav;
-
-  const ExpandablePlayer({
-    super.key,
-    this.hasBottomNav = false,
-  });
+  const ExpandablePlayer({super.key});
 
   @override
   State<ExpandablePlayer> createState() => ExpandablePlayerState();
@@ -45,11 +39,12 @@ class ExpandablePlayerState extends State<ExpandablePlayer>
   Timer? _progressTimer;
   double? _seekPosition;
 
-  // Collapsed dimensions
+  // Dimensions
   static const double _collapsedHeight = 64.0;
   static const double _collapsedMargin = 8.0;
   static const double _collapsedBorderRadius = 16.0;
   static const double _collapsedArtSize = 64.0;
+  static const double _bottomNavHeight = 56.0;
 
   @override
   void initState() {
@@ -235,96 +230,66 @@ class ExpandablePlayerState extends State<ExpandablePlayer>
 
     final primaryColor = adaptiveScheme?.primary ?? Colors.white;
 
-    // Container dimensions
-    const bottomNavHeight = 56.0;
-
-    // Calculate offsets based on whether bottom nav exists
-    final double collapsedBottomOffset;
-    final double expandedBottomOffset;
-    final double expandedHeight;
-
-    if (widget.hasBottomNav) {
-      // With bottom nav: position above it, stay above it when expanded
-      final bottomNavSpace = bottomNavHeight + bottomPadding;
-      collapsedBottomOffset = bottomNavSpace + _collapsedMargin;
-      expandedBottomOffset = bottomNavSpace;
-      expandedHeight = screenSize.height - bottomNavSpace;
-    } else {
-      // Without bottom nav: just use safe area padding
-      collapsedBottomOffset = bottomPadding + _collapsedMargin;
-      expandedBottomOffset = 0; // Go to very bottom when expanded
-      expandedHeight = screenSize.height; // Full screen
-    }
+    // Always position above bottom nav bar
+    final bottomNavSpace = _bottomNavHeight + bottomPadding;
+    final collapsedBottomOffset = bottomNavSpace + _collapsedMargin;
+    // When expanded, stay just above the bottom nav
+    final expandedBottomOffset = bottomNavSpace;
+    // Height fills from bottom nav to top of screen
+    final expandedHeight = screenSize.height - bottomNavSpace;
 
     final collapsedWidth = screenSize.width - (_collapsedMargin * 2);
-    final width = lerpDouble(collapsedWidth, screenSize.width, t);
-    final height = lerpDouble(_collapsedHeight, expandedHeight, t);
-    final horizontalMargin = lerpDouble(_collapsedMargin, 0, t);
-    final bottomOffset = lerpDouble(collapsedBottomOffset, expandedBottomOffset, t);
-    final borderRadius = lerpDouble(_collapsedBorderRadius, 0, t);
+    final width = _lerpDouble(collapsedWidth, screenSize.width, t);
+    final height = _lerpDouble(_collapsedHeight, expandedHeight, t);
+    final horizontalMargin = _lerpDouble(_collapsedMargin, 0, t);
+    final bottomOffset = _lerpDouble(collapsedBottomOffset, expandedBottomOffset, t);
+    final borderRadius = _lerpDouble(_collapsedBorderRadius, 0, t);
 
-    // Album art morphing calculations
+    // Album art morphing
     final expandedArtSize = screenSize.width * 0.75;
-    final artSize = lerpDouble(_collapsedArtSize, expandedArtSize, t);
-    final artBorderRadius = lerpDouble(_collapsedBorderRadius, 16, t);
+    final artSize = _lerpDouble(_collapsedArtSize, expandedArtSize, t);
+    final artBorderRadius = _lerpDouble(_collapsedBorderRadius, 16, t);
 
-    // Art position: left-aligned in collapsed, centered in expanded
+    // Art position
     final collapsedArtLeft = 0.0;
     final expandedArtLeft = (screenSize.width - expandedArtSize) / 2;
-    final artLeft = lerpDouble(collapsedArtLeft, expandedArtLeft, t);
+    final artLeft = _lerpDouble(collapsedArtLeft, expandedArtLeft, t);
 
-    // Art vertical position: centered in collapsed bar, upper area in expanded
     final collapsedArtTop = 0.0;
-    final expandedArtTop = topPadding + 80;
-    final artTop = lerpDouble(collapsedArtTop, expandedArtTop, t);
+    final expandedArtTop = topPadding + 60;
+    final artTop = _lerpDouble(collapsedArtTop, expandedArtTop, t);
 
     // Track title morphing
-    final collapsedTitleFontSize = 14.0;
-    final expandedTitleFontSize = 24.0;
-    final titleFontSize = lerpDouble(collapsedTitleFontSize, expandedTitleFontSize, t);
-
-    // Title position: next to art in collapsed, centered below art in expanded
+    final titleFontSize = _lerpDouble(14.0, 24.0, t);
     final collapsedTitleLeft = _collapsedArtSize + 12;
     final expandedTitleLeft = 24.0;
-    final titleLeft = lerpDouble(collapsedTitleLeft, expandedTitleLeft, t);
+    final titleLeft = _lerpDouble(collapsedTitleLeft, expandedTitleLeft, t);
 
-    final collapsedTitleTop = (_collapsedHeight - 32) / 2; // Centered vertically
-    final expandedTitleTop = expandedArtTop + expandedArtSize + 40;
-    final titleTop = lerpDouble(collapsedTitleTop, expandedTitleTop, t);
+    final collapsedTitleTop = (_collapsedHeight - 32) / 2;
+    final expandedTitleTop = expandedArtTop + expandedArtSize + 32;
+    final titleTop = _lerpDouble(collapsedTitleTop, expandedTitleTop, t);
 
-    final collapsedTitleWidth = screenSize.width - _collapsedArtSize - 150; // Leave room for controls
+    final collapsedTitleWidth = screenSize.width - _collapsedArtSize - 150;
     final expandedTitleWidth = screenSize.width - 48;
-    final titleWidth = lerpDouble(collapsedTitleWidth, expandedTitleWidth, t);
+    final titleWidth = _lerpDouble(collapsedTitleWidth, expandedTitleWidth, t);
 
     // Artist name morphing
-    final collapsedArtistFontSize = 12.0;
-    final expandedArtistFontSize = 16.0;
-    final artistFontSize = lerpDouble(collapsedArtistFontSize, expandedArtistFontSize, t);
-
+    final artistFontSize = _lerpDouble(12.0, 16.0, t);
     final collapsedArtistTop = collapsedTitleTop + 18;
-    final expandedArtistTop = expandedTitleTop + 40;
-    final artistTop = lerpDouble(collapsedArtistTop, expandedArtistTop, t);
+    final expandedArtistTop = expandedTitleTop + 36;
+    final artistTop = _lerpDouble(collapsedArtistTop, expandedArtistTop, t);
 
-    // Controls morphing - calculate based on actual button widths
-    // Collapsed: just prev(28) + play(34) + next(28) = 90, plus some padding
-    // Expanded: shuffle(48) + prev(42) + play(72) + next(42) + repeat(48) + gaps = ~300
+    // Controls
     final collapsedControlsRight = 8.0;
-    final controlsRight = collapsedControlsRight; // Only used when collapsed
+    final collapsedControlsTop = (_collapsedHeight - 34) / 2 - 6;
+    final expandedControlsTop = expandedArtistTop + 90;
+    final controlsTop = _lerpDouble(collapsedControlsTop, expandedControlsTop, t);
 
-    // Vertical: in collapsed, center the 34px play button in 64px height
-    final collapsedControlsTop = (_collapsedHeight - 34) / 2 - 6; // Adjust up for visual centering
-    final expandedControlsTop = expandedArtistTop + 100;
-    final controlsTop = lerpDouble(collapsedControlsTop, expandedControlsTop, t);
+    final skipButtonSize = _lerpDouble(28, 42, t);
+    final playButtonSize = _lerpDouble(34, 42, t);
+    final playButtonContainerSize = _lerpDouble(34, 72, t);
 
-    // Control button sizes
-    final skipButtonSize = lerpDouble(28, 42, t);
-    final playButtonSize = lerpDouble(34, 42, t);
-    final playButtonContainerSize = lerpDouble(34, 72, t);
-
-    // Progress bar and extra controls opacity (only visible when expanded)
     final expandedElementsOpacity = Curves.easeIn.transform((t - 0.5).clamp(0, 0.5) * 2);
-
-    // Volume control position
     final volumeTop = expandedControlsTop + 80;
 
     return Positioned(
@@ -344,8 +309,8 @@ class ExpandablePlayerState extends State<ExpandablePlayer>
         },
         child: Material(
           color: backgroundColor,
-          borderRadius: BorderRadius.circular(borderRadius!),
-          elevation: lerpDouble(4, 0, t)!,
+          borderRadius: BorderRadius.circular(borderRadius),
+          elevation: _lerpDouble(4, 0, t),
           shadowColor: Colors.black.withOpacity(0.3),
           clipBehavior: Clip.antiAlias,
           child: SizedBox(
@@ -354,7 +319,7 @@ class ExpandablePlayerState extends State<ExpandablePlayer>
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                // Album art - morphs from left to center
+                // Album art
                 Positioned(
                   left: artLeft,
                   top: artTop,
@@ -362,7 +327,7 @@ class ExpandablePlayerState extends State<ExpandablePlayer>
                     width: artSize,
                     height: artSize,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(artBorderRadius!),
+                      borderRadius: BorderRadius.circular(artBorderRadius),
                       boxShadow: t > 0.3
                           ? [
                               BoxShadow(
@@ -388,7 +353,7 @@ class ExpandablePlayerState extends State<ExpandablePlayer>
                   ),
                 ),
 
-                // Track title - morphs from beside art to centered below
+                // Track title
                 Positioned(
                   left: titleLeft,
                   top: titleTop,
@@ -408,7 +373,7 @@ class ExpandablePlayerState extends State<ExpandablePlayer>
                   ),
                 ),
 
-                // Artist name - morphs similarly
+                // Artist name
                 Positioned(
                   left: titleLeft,
                   top: artistTop,
@@ -427,12 +392,12 @@ class ExpandablePlayerState extends State<ExpandablePlayer>
                   ),
                 ),
 
-                // Album name (only visible when expanded)
+                // Album name (expanded only)
                 if (currentTrack.album != null && t > 0.3)
                   Positioned(
                     left: 24,
                     right: 24,
-                    top: artistTop! + 28,
+                    top: artistTop + 24,
                     child: Opacity(
                       opacity: ((t - 0.3) / 0.7).clamp(0.0, 1.0),
                       child: Text(
@@ -448,12 +413,12 @@ class ExpandablePlayerState extends State<ExpandablePlayer>
                     ),
                   ),
 
-                // Progress bar (fades in when expanded)
+                // Progress bar (expanded only)
                 if (t > 0.5 && currentTrack.duration != null)
                   Positioned(
                     left: 24,
                     right: 24,
-                    top: expandedArtistTop + 60,
+                    top: expandedArtistTop + 50,
                     child: Opacity(
                       opacity: expandedElementsOpacity,
                       child: Column(
@@ -509,18 +474,16 @@ class ExpandablePlayerState extends State<ExpandablePlayer>
                     ),
                   ),
 
-                // Playback controls - morph from right side to centered
-                // When collapsed: position from right
-                // When expanded: center horizontally
+                // Playback controls
                 Positioned(
                   left: t > 0.5 ? 0 : null,
-                  right: t > 0.5 ? 0 : controlsRight,
+                  right: t > 0.5 ? 0 : collapsedControlsRight,
                   top: controlsTop,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: t > 0.5 ? MainAxisAlignment.center : MainAxisAlignment.end,
                     children: [
-                      // Shuffle button (fades in when expanded)
+                      // Shuffle (expanded only)
                       if (t > 0.5)
                         Opacity(
                           opacity: expandedElementsOpacity,
@@ -535,32 +498,32 @@ class ExpandablePlayerState extends State<ExpandablePlayer>
                         ),
                       if (t > 0.5) const SizedBox(width: 12),
 
-                      // Previous button
-                      _buildMorphingControlButton(
+                      // Previous
+                      _buildControlButton(
                         icon: Icons.skip_previous_rounded,
                         color: textColor,
-                        size: skipButtonSize!,
+                        size: skipButtonSize,
                         onPressed: () => maProvider.previousTrackSelectedPlayer(),
                         useAnimation: t > 0.5,
                       ),
-                      SizedBox(width: lerpDouble(0, 12, t)),
+                      SizedBox(width: _lerpDouble(0, 12, t)),
 
-                      // Play/Pause button - morphs from simple to circular
-                      _buildMorphingPlayButton(
+                      // Play/Pause
+                      _buildPlayButton(
                         isPlaying: selectedPlayer.isPlaying,
                         textColor: textColor,
                         primaryColor: primaryColor,
                         backgroundColor: backgroundColor,
-                        size: playButtonSize!,
-                        containerSize: playButtonContainerSize!,
+                        size: playButtonSize,
+                        containerSize: playButtonContainerSize,
                         progress: t,
                         onPressed: () => maProvider.playPauseSelectedPlayer(),
                         onLongPress: () => maProvider.stopPlayer(selectedPlayer.playerId),
                       ),
-                      SizedBox(width: lerpDouble(0, 12, t)),
+                      SizedBox(width: _lerpDouble(0, 12, t)),
 
-                      // Next button
-                      _buildMorphingControlButton(
+                      // Next
+                      _buildControlButton(
                         icon: Icons.skip_next_rounded,
                         color: textColor,
                         size: skipButtonSize,
@@ -568,7 +531,7 @@ class ExpandablePlayerState extends State<ExpandablePlayer>
                         useAnimation: t > 0.5,
                       ),
 
-                      // Repeat button (fades in when expanded)
+                      // Repeat (expanded only)
                       if (t > 0.5) const SizedBox(width: 12),
                       if (t > 0.5)
                         Opacity(
@@ -588,7 +551,7 @@ class ExpandablePlayerState extends State<ExpandablePlayer>
                   ),
                 ),
 
-                // Volume control (fades in when expanded)
+                // Volume control (expanded only)
                 if (t > 0.5)
                   Positioned(
                     left: 40,
@@ -600,7 +563,7 @@ class ExpandablePlayerState extends State<ExpandablePlayer>
                     ),
                   ),
 
-                // Collapse button (fades in when expanded)
+                // Collapse button (expanded only)
                 if (t > 0.3)
                   Positioned(
                     top: topPadding + 8,
@@ -614,7 +577,7 @@ class ExpandablePlayerState extends State<ExpandablePlayer>
                     ),
                   ),
 
-                // Queue button (fades in when expanded)
+                // Queue button (expanded only)
                 if (t > 0.3)
                   Positioned(
                     top: topPadding + 8,
@@ -633,7 +596,7 @@ class ExpandablePlayerState extends State<ExpandablePlayer>
                     ),
                   ),
 
-                // Player name (fades in when expanded)
+                // Player name (expanded only)
                 if (t > 0.5)
                   Positioned(
                     top: topPadding + 16,
@@ -666,12 +629,12 @@ class ExpandablePlayerState extends State<ExpandablePlayer>
       child: Icon(
         Icons.music_note_rounded,
         color: Color.lerp(colorScheme.onSurfaceVariant, Colors.white24, t),
-        size: lerpDouble(24, 120, t),
+        size: _lerpDouble(24, 120, t),
       ),
     );
   }
 
-  Widget _buildMorphingControlButton({
+  Widget _buildControlButton({
     required IconData icon,
     required Color color,
     required double size,
@@ -696,7 +659,7 @@ class ExpandablePlayerState extends State<ExpandablePlayer>
     );
   }
 
-  Widget _buildMorphingPlayButton({
+  Widget _buildPlayButton({
     required bool isPlaying,
     required Color textColor,
     required Color primaryColor,
@@ -707,7 +670,6 @@ class ExpandablePlayerState extends State<ExpandablePlayer>
     required VoidCallback onPressed,
     VoidCallback? onLongPress,
   }) {
-    // Interpolate between no background (collapsed) and circular background (expanded)
     final bgColor = Color.lerp(Colors.transparent, primaryColor, progress);
     final iconColor = Color.lerp(textColor, backgroundColor, progress);
 
@@ -730,8 +692,8 @@ class ExpandablePlayerState extends State<ExpandablePlayer>
       ),
     );
   }
-}
 
-double? lerpDouble(double a, double b, double t) {
-  return a + (b - a) * t;
+  double _lerpDouble(double a, double b, double t) {
+    return a + (b - a) * t;
+  }
 }

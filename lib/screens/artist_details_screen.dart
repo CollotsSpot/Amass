@@ -7,7 +7,6 @@ import '../constants/hero_tags.dart';
 import '../theme/palette_helper.dart';
 import '../theme/theme_provider.dart';
 import '../services/metadata_service.dart';
-import '../widgets/expandable_player.dart';
 
 class ArtistDetailsScreen extends StatefulWidget {
   final Artist artist;
@@ -375,13 +374,9 @@ class _ArtistDetailsScreenState extends State<ArtistDetailsScreen> {
                   ),
                 ),
               ),
-              const SliverToBoxAdapter(child: SizedBox(height: 80)), // Extra space for expandable player
+              const SliverToBoxAdapter(child: SizedBox(height: 140)), // Extra space for mini player + bottom nav
             ],
           ],
-        ],
-      ),
-          // Expandable player at bottom of screen
-          const ExpandablePlayer(),
         ],
       ),
     );
