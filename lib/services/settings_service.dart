@@ -218,7 +218,7 @@ class SettingsService {
   // Local Playback Settings
   static Future<bool> getEnableLocalPlayback() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_keyEnableLocalPlayback) ?? false;
+    return prefs.getBool(_keyEnableLocalPlayback) ?? true;
   }
 
   static Future<void> setEnableLocalPlayback(bool enabled) async {

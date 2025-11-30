@@ -133,12 +133,23 @@ class MusicAssistantProvider with ChangeNotifier {
     }
   }
 
+  Future<void> _cleanupGhostPlayers() async {
+    if (_api == null) return;
+
+    try {
+      await _api!.cleanupUnavailableBuiltinPlayers();
+    } catch (e) {
+      _logger.log('⚠️ Ghost player cleanup failed (non-fatal): $e');
+      // Continue - this is non-critical
+    }
+  }
+
   Future<void> _registerLocalPlayer() async {
     if (_api == null) return;
-    
+
     final playerId = await SettingsService.getBuiltinPlayerId();
     final name = await SettingsService.getLocalPlayerName();
-    
+
     if (playerId != null) {
       await _api!.registerBuiltinPlayer(playerId, name);
       _startReportingLocalPlayerState();
@@ -197,12 +208,15 @@ class MusicAssistantProvider with ChangeNotifier {
         notifyListeners();
 
         if (state == MAConnectionState.connected) {
+          // Clean up ghost players from previous installations
+          _cleanupGhostPlayers();
+
           // Load available players and auto-select
           _loadAndSelectPlayers();
 
           // Auto-load library when connected
           loadLibrary();
-          
+
           // Re-register local player if enabled
           if (_isLocalPlaybackEnabled) {
             _registerLocalPlayer();

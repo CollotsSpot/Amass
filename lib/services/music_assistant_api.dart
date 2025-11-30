@@ -1205,6 +1205,71 @@ class MusicAssistantAPI {
       rethrow; // Rethrow to propagate the error up
     }
   }
+
+  /// Unregister a builtin player
+  Future<void> unregisterBuiltinPlayer(String playerId) async {
+    try {
+      _logger.log('🗑️ Unregistering builtin player: id=$playerId');
+      await _sendCommand(
+        'builtin_player/unregister',
+        args: {
+          'player_id': playerId,
+        },
+      );
+      _logger.log('✅ Builtin player unregistered successfully');
+    } catch (e) {
+      _logger.log('❌ Error unregistering built-in player: $e');
+      // Don't rethrow - cleanup should be non-fatal
+    }
+  }
+
+  /// Clean up unavailable builtin players (ghost players from old installations)
+  Future<void> cleanupUnavailableBuiltinPlayers() async {
+    try {
+      _logger.log('🧹 Starting cleanup of unavailable builtin players...');
+
+      // Get all players from the server
+      final allPlayers = await getPlayers();
+
+      // Get current builtin player ID to avoid deleting ourselves
+      final currentPlayerId = await SettingsService.getBuiltinPlayerId();
+
+      // Find unavailable builtin players
+      final ghostPlayers = allPlayers.where((player) {
+        final isBuiltinPlayer = player.provider == 'builtin_player';
+        final isUnavailable = !player.available;
+        final isNotCurrentPlayer = player.playerId != currentPlayerId;
+
+        return isBuiltinPlayer && isUnavailable && isNotCurrentPlayer;
+      }).toList();
+
+      if (ghostPlayers.isEmpty) {
+        _logger.log('✅ No ghost players found - cleanup complete');
+        return;
+      }
+
+      _logger.log('🗑️ Found ${ghostPlayers.length} ghost player(s) to remove:');
+      for (final player in ghostPlayers) {
+        _logger.log('   - ${player.name} (${player.playerId})');
+      }
+
+      // Remove each ghost player
+      int removedCount = 0;
+      for (final player in ghostPlayers) {
+        try {
+          await unregisterBuiltinPlayer(player.playerId);
+          removedCount++;
+        } catch (e) {
+          _logger.log('⚠️ Failed to remove ghost player ${player.playerId}: $e');
+        }
+      }
+
+      _logger.log('✅ Cleanup complete - removed $removedCount ghost player(s)');
+    } catch (e) {
+      _logger.log('❌ Error during cleanup of unavailable builtin players: $e');
+      // Don't rethrow - cleanup should be non-fatal
+    }
+  }
   
   /// Send player state update to server
   /// Fixed: Server expects state as a dataclass object, not a string
