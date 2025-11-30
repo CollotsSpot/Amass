@@ -140,6 +140,38 @@ class MusicAssistantProvider with ChangeNotifier {
     }
   }
 
+  /// Manually purge all unavailable players (user-triggered from settings)
+  /// Returns a tuple of (removedCount, failedCount)
+  Future<(int, int)> purgeUnavailablePlayers() async {
+    if (_api == null) return (0, 0);
+
+    try {
+      _logger.log('🧹 User-triggered purge of unavailable players...');
+      final result = await _api!.purgeAllUnavailablePlayers();
+
+      // Refresh players list after purge
+      await _loadAndSelectPlayers();
+
+      return result;
+    } catch (e) {
+      _logger.log('❌ Purge failed: $e');
+      rethrow;
+    }
+  }
+
+  /// Get count of unavailable players (for UI display)
+  Future<int> getUnavailablePlayersCount() async {
+    if (_api == null) return 0;
+
+    try {
+      final allPlayers = await _api!.getPlayers();
+      return allPlayers.where((p) => !p.available).length;
+    } catch (e) {
+      _logger.log('Error getting unavailable players count: $e');
+      return 0;
+    }
+  }
+
   Future<void> _registerLocalPlayer() async {
     if (_api == null) return;
 

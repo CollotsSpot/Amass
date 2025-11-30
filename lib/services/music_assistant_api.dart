@@ -8,6 +8,7 @@ import '../models/media_item.dart';
 import '../models/player.dart';
 import 'debug_logger.dart';
 import 'settings_service.dart';
+import 'device_id_service.dart';
 import 'retry_helper.dart';
 import 'auth/auth_manager.dart';
 
@@ -76,14 +77,17 @@ class MusicAssistantAPI {
         useSecure = wsUrl.startsWith('wss://');
       }
 
-      // Get or generate a persistent client ID to prevent ghost players
+      // Get or generate a device-based client ID to prevent ghost players
+      // This ID is consistent across reinstalls on the same device
       var clientId = await SettingsService.getBuiltinPlayerId();
-      if (clientId == null) {
-        clientId = _uuid.v4();
-        await SettingsService.setBuiltinPlayerId(clientId);
-        _logger.log('Generated and saved new client ID: $clientId');
+
+      // Check if we need to migrate from legacy random UUID to device-based ID
+      if (clientId == null || await DeviceIdService.isUsingLegacyId()) {
+        _logger.log('Migrating to device-based player ID...');
+        clientId = await DeviceIdService.migrateToDeviceId();
+        _logger.log('Now using device-based client ID: $clientId');
       } else {
-        _logger.log('Using existing client ID: $clientId');
+        _logger.log('Using existing device-based client ID: $clientId');
       }
 
       // Construct WebSocket URL with proper port handling
@@ -1285,7 +1289,70 @@ class MusicAssistantAPI {
       // Don't rethrow - cleanup should be non-fatal
     }
   }
-  
+
+  /// Purge ALL unavailable players (user-triggered, more aggressive than auto-cleanup)
+  /// Returns (removedCount, failedCount)
+  Future<(int, int)> purgeAllUnavailablePlayers() async {
+    _logger.log('🧹 Starting purge of ALL unavailable players...');
+
+    final allPlayers = await getPlayers();
+    final currentPlayerId = await SettingsService.getBuiltinPlayerId();
+
+    // Find all unavailable players (not just builtin ones)
+    final unavailablePlayers = allPlayers.where((player) {
+      final isUnavailable = !player.available;
+      final isNotCurrentPlayer = player.playerId != currentPlayerId;
+      return isUnavailable && isNotCurrentPlayer;
+    }).toList();
+
+    if (unavailablePlayers.isEmpty) {
+      _logger.log('✅ No unavailable players found');
+      return (0, 0);
+    }
+
+    _logger.log('🗑️ Found ${unavailablePlayers.length} unavailable player(s) to remove');
+
+    int removedCount = 0;
+    int failedCount = 0;
+
+    for (final player in unavailablePlayers) {
+      try {
+        _logger.log('   Removing: ${player.name} (${player.playerId})');
+        // Try unregister for builtin players
+        if (player.provider == 'builtin_player' ||
+            player.name.toLowerCase().contains('massiv') ||
+            player.name.toLowerCase().contains('this device') ||
+            player.name.toLowerCase().contains('assistant to the music')) {
+          await unregisterBuiltinPlayer(player.playerId);
+        } else {
+          // Use generic player remove for other types
+          await _removePlayer(player.playerId);
+        }
+        removedCount++;
+        _logger.log('✅ Removed: ${player.name}');
+      } catch (e) {
+        failedCount++;
+        _logger.log('⚠️ Failed to remove ${player.name}: $e');
+      }
+    }
+
+    _logger.log('✅ Purge complete - removed $removedCount, failed $failedCount');
+    return (removedCount, failedCount);
+  }
+
+  /// Generic player removal (for non-builtin players)
+  Future<void> _removePlayer(String playerId) async {
+    try {
+      await _sendCommand(
+        'players/remove',
+        args: {'player_id': playerId},
+      );
+    } catch (e) {
+      _logger.log('❌ Error removing player: $e');
+      rethrow;
+    }
+  }
+
   /// Send player state update to server
   /// Fixed: Server expects state as a dataclass object, not a string
   /// See: music_assistant_models.builtin_player.BuiltinPlayerState

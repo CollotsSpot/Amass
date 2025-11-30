@@ -27,6 +27,8 @@ dependencies:
 
   # Utilities
   uuid: ^4.2.1
+  device_info_plus: ^10.1.0
+  crypto: ^3.0.3
 
   # Audio - Local Playback
   just_audio: ^0.9.36
