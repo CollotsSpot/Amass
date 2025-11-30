@@ -3,6 +3,7 @@ import 'media_item.dart';
 class Player {
   final String playerId;
   final String name;
+  final String? provider; // e.g., 'builtin_player', 'chromecast', etc.
   final bool available;
   final bool powered;
   final String state; // 'idle', 'playing', 'paused'
@@ -15,6 +16,7 @@ class Player {
   Player({
     required this.playerId,
     required this.name,
+    this.provider,
     required this.available,
     required this.powered,
     required this.state,
@@ -84,6 +86,7 @@ class Player {
     return Player(
       playerId: json['player_id'] as String,
       name: json['name'] as String,
+      provider: json['provider'] as String?,
       available: json['available'] as bool? ?? false,
       powered: json['powered'] as bool? ?? false,
       state: json['state'] as String? ?? 'idle',
@@ -99,6 +102,7 @@ class Player {
     return {
       'player_id': playerId,
       'name': name,
+      if (provider != null) 'provider': provider,
       'available': available,
       'powered': powered,
       'state': state,
