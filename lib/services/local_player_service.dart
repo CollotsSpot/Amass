@@ -176,6 +176,12 @@ class LocalPlayerService {
 
   /// Play a stream URL with authentication headers
   Future<void> playUrl(String url) async {
+    // Ensure player is initialized before playing
+    if (!_isInitialized) {
+      _logger.log('LocalPlayerService: Not initialized, initializing now...');
+      await initialize();
+    }
+
     try {
       _logger.log('LocalPlayerService: Loading URL: $url');
       _logger.log('LocalPlayerService: _useAudioHandler=$_useAudioHandler, _fallbackPlayer=${_fallbackPlayer != null}');
